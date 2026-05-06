@@ -133,7 +133,7 @@ export default function Home() {
         }
 
         .send-btn {
-          background: #1c1917;
+          background: #00d1b2;
           border: none;
           border-radius: 9px;
           width: 36px;
@@ -173,7 +173,8 @@ export default function Home() {
           background: "white",
           borderBottom: "1px solid #e7e5e4",
           padding: "0 24px",
-          height: "60px",
+          height: "90px",
+          width: "100%",
           display: "flex",
           alignItems: "center",
           gap: "12px",
@@ -184,9 +185,9 @@ export default function Home() {
         {/* Logo */}
         <div
           style={{
-            width: 36,
-            height: 36,
-            background: "#1c1917",
+            width: 38,
+            height: 38,
+            background: "#00d1b2",
             borderRadius: 9,
             display: "flex",
             alignItems: "center",
@@ -203,7 +204,7 @@ export default function Home() {
         </div>
 
         <div style={{ flex: 1 }}>
-          <div className="serif" style={{ fontSize: 14, color: "#1c1917", lineHeight: 1.2 }}>
+          <div className="serif" style={{ fontSize: 16, color: "#1c1917", lineHeight: 1.2 }}>
             Amrood Labs
           </div>
           <div
