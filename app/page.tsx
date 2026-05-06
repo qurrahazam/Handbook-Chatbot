@@ -360,7 +360,7 @@ export default function Home() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: msg.role === "user" ? "#1c1917" : "white",
+                    background: msg.role === "user" ? "#00d1b2" : "white",
                     border: msg.role === "assistant" ? "1px solid #e7e5e4" : "none",
                   }}
                 >
@@ -383,7 +383,7 @@ export default function Home() {
                     style={
                       msg.role === "user"
                         ? {
-                            background: "#1c1917",
+                            background: "#00d1b2",
                             color: "white",
                             padding: "10px 15px",
                             borderRadius: "14px 4px 14px 14px",
