@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, RotateCcw, FileText, Sparkles } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const REQUEST_TIMEOUT_MS = 45000;
+
+type ApiStatus = "checking" | "online" | "offline";
 
 type Source = {
   page: number | string;
@@ -16,6 +18,16 @@ type Message = {
   sources?: Source[];
 };
 
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly kind: "server" | "network" | "timeout",
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 const SUGGESTIONS = [
   "What is the leave policy?",
   "How do I report a complaint?",
@@ -23,16 +35,49 @@ const SUGGESTIONS = [
   "What benefits am I entitled to?",
 ];
 
+const STATUS_COLOR: Record<ApiStatus, string> = {
+  checking: "#d6d3d1",
+  online: "#34d399",
+  offline: "#f87171",
+};
+
+const STATUS_LABEL: Record<ApiStatus, string> = {
+  checking: "Checking",
+  online: "Online",
+  offline: "Unreachable",
+};
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // The /api/health proxy reports reachability without needing CORS, and it
+  // keeps the backend URL and API key on the server.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function probe() {
+      try {
+        const res = await fetch("/api/health", { cache: "no-store" });
+        if (!cancelled) setApiStatus(res.ok ? "online" : "offline");
+      } catch {
+        if (!cancelled) setApiStatus("offline");
+      }
+    }
+
+    probe();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function autoResize() {
     const el = textareaRef.current;
@@ -50,27 +95,68 @@ export default function Home() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setLoading(true);
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const res = await fetch(`${API_URL}/ask`, {
+      const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
+        signal: controller.signal,
       });
-      const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.answer, sources: data.sources },
-      ]);
-    } catch {
+
+      // Read as text first: a 500 from FastAPI/uvicorn returns plain text,
+      // so calling res.json() directly would throw and mask the real status.
+      const raw = await res.text();
+
+      let data: {
+        answer?: string;
+        sources?: Source[];
+        detail?: string;
+      };
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new ApiError(
+          res.ok
+            ? "The server returned an unreadable response."
+            : `The server returned HTTP ${res.status}. Check the backend logs.`,
+          "server",
+        );
+      }
+
+      if (!res.ok) {
+        const detail =
+          data.detail || data.answer || `Request failed with HTTP ${res.status}.`;
+        throw new ApiError(detail, "server");
+      }
+
+      setApiStatus("online");
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "Unable to reach the server. Please ensure the backend is running and try again.",
+          content: data.answer || "The assistant returned an empty answer.",
+          sources: data.sources,
         },
       ]);
+    } catch (err) {
+      let reply: string;
+
+      if (err instanceof ApiError) {
+        reply = err.message;
+      } else if (err instanceof DOMException && err.name === "AbortError") {
+        reply = "The request timed out. The backend may be starting up — please try again.";
+      } else {
+        setApiStatus("offline");
+        reply =
+          "Could not reach the assistant service. Please try again in a moment.";
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } finally {
+      clearTimeout(timer);
       setLoading(false);
     }
   }
@@ -230,16 +316,16 @@ export default function Home() {
           }}
         >
           <span
-            className="pulse-dot"
+            className={apiStatus === "checking" ? "" : "pulse-dot"}
             style={{
               width: 7,
               height: 7,
               borderRadius: "50%",
-              background: "#34d399",
+              background: STATUS_COLOR[apiStatus],
               display: "inline-block",
             }}
           />
-          Online
+          {STATUS_LABEL[apiStatus]}
         </div>
       </header>
 
