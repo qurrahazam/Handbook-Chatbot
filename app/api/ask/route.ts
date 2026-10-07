@@ -1,4 +1,5 @@
 import { BACKEND_URL, UPSTREAM_TIMEOUT_MS, UPSTREAM_HEADERS } from "../_config";
+import { checkRateLimit, clientIp } from "../_ratelimit";
 
 type AskBody = {
   question?: string;
@@ -8,6 +9,20 @@ type AskBody = {
 };
 
 export async function POST(request: Request) {
+  const ip = clientIp(request);
+  const limit = checkRateLimit(ip);
+
+  if (!limit.allowed) {
+    return Response.json(
+      {
+        answer: "You're asking questions faster than this assistant can respond. Please wait a moment.",
+        sources: [],
+        detail: `Rate limit reached. Try again in ${limit.retryAfter}s.`,
+      },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   let body: AskBody;
 
   try {
@@ -44,6 +59,7 @@ export async function POST(request: Request) {
       status: upstream.status,
       headers: {
         "Content-Type": upstream.headers.get("content-type") ?? "application/json",
+        "X-RateLimit-Remaining": String(limit.remaining),
       },
     });
   } catch (error) {
