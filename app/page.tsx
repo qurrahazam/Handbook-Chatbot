@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, RotateCcw, FileText, Sparkles } from "lucide-react";
+import { Send, RotateCcw, FileText, Sparkles, Copy, Check } from "lucide-react";
+import Markdown from "./components/Markdown";
 
 const REQUEST_TIMEOUT_MS = 45000;
 
@@ -52,6 +53,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -163,19 +165,20 @@ export default function Home() {
 
   return (
     <div
-      className="h-screen flex flex-col overflow-hidden"
       style={{
-        fontFamily: "'DM Sans', sans-serif",
+        height: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
         background: "#fafaf9",
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
-        .serif { font-family: 'Lora', serif; }
-
         textarea:focus { outline: none; }
         textarea::placeholder { color: #a8a29e; }
+
+        .md-list { color: #292524; }
+        .md-list li::marker { color: #00b39f; }
 
         .dot-bounce { animation: bounce 1.2s ease-in-out infinite; }
         .dot-bounce:nth-child(2) { animation-delay: 0.2s; }
@@ -196,7 +199,7 @@ export default function Home() {
           border: 1px solid #e7e5e4;
           border-radius: 10px;
           padding: 11px 14px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: inherit;
           font-size: 13px;
           color: #78716c;
           cursor: pointer;
@@ -471,42 +474,120 @@ export default function Home() {
                         ? {
                             background: "#00d1b2",
                             color: "white",
-                            padding: "10px 15px",
-                            borderRadius: "14px 4px 14px 14px",
-                            fontSize: 14,
-                            lineHeight: 1.6,
+                            padding: "11px 16px",
+                            borderRadius: "16px 4px 16px 16px",
+                            fontSize: 14.5,
+                            lineHeight: 1.65,
+                            overflowWrap: "anywhere",
                           }
                         : {
                             background: "white",
                             color: "#292524",
                             border: "1px solid #e7e5e4",
-                            padding: "10px 15px",
-                            borderRadius: "4px 14px 14px 14px",
-                            fontSize: 14,
-                            lineHeight: 1.6,
+                            padding: "14px 18px",
+                            borderRadius: "4px 16px 16px 16px",
+                            fontSize: 14.5,
+                            lineHeight: 1.7,
                             boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                            minWidth: 0,
+                            overflowWrap: "anywhere",
                           }
                     }
                   >
-                    {msg.content}
+                    {msg.role === "assistant" ? (
+                      <Markdown text={msg.content} />
+                    ) : (
+                      <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
+                    )}
                   </div>
 
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#a8a29e",
-                        paddingLeft: 4,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                      }}
-                    >
-                      {msg.sources.map((s, j) => (
-                        <span key={j}>
-                          Page {s.page} — {s.snippet}
-                        </span>
-                      ))}
+                  {msg.role === "assistant" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {msg.sources && msg.sources.length > 0 && (
+                        <details style={{ fontSize: 11.5, color: "#a8a29e" }}>
+                          <summary
+                            style={{
+                              cursor: "pointer",
+                              listStyle: "none",
+                              userSelect: "none",
+                            }}
+                          >
+                            {msg.sources.length} source
+                            {msg.sources.length === 1 ? "" : "s"}
+                          </summary>
+                          <div
+                            style={{
+                              marginTop: 6,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 6,
+                              maxWidth: 460,
+                            }}
+                          >
+                            {msg.sources.map((s, j) => (
+                              <div
+                                key={j}
+                                style={{
+                                  display: "flex",
+                                  gap: 8,
+                                  alignItems: "flex-start",
+                                  background: "#f5f5f4",
+                                  border: "1px solid #e7e5e4",
+                                  borderRadius: 8,
+                                  padding: "7px 10px",
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    flexShrink: 0,
+                                    background: "white",
+                                    border: "1px solid #e7e5e4",
+                                    borderRadius: 5,
+                                    padding: "1px 6px",
+                                    fontSize: 10.5,
+                                    color: "#78716c",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  p. {s.page}
+                                </span>
+                                <span style={{ color: "#78716c" }}>{s.snippet}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          navigator.clipboard?.writeText(msg.content);
+                          setCopiedIndex(i);
+                          setTimeout(() => setCopiedIndex(null), 1600);
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "#a8a29e",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 11.5,
+                          padding: 2,
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {copiedIndex === i ? (
+                          <>
+                            <Check size={12} /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} /> Copy
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -638,7 +719,7 @@ export default function Home() {
                 flex: 1,
                 background: "none",
                 border: "none",
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "inherit",
                 fontSize: 14,
                 color: "#292524",
                 padding: "10px 0",
