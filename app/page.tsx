@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, RotateCcw, FileText, Sparkles, Copy, Check } from "lucide-react";
+import { Send, RotateCcw, FileText, Sparkles, Copy, Check, ArrowRight } from "lucide-react";
 import Markdown from "./components/Markdown";
 
 const REQUEST_TIMEOUT_MS = 45000;
@@ -197,24 +197,37 @@ export default function Home() {
         .sug-btn {
           background: white;
           border: 1px solid #e7e5e4;
-          border-radius: 10px;
-          padding: 11px 14px;
+          border-radius: 12px;
+          padding: 13px 15px;
           font-family: inherit;
-          font-size: 13px;
-          color: #78716c;
+          font-size: 13.5px;
+          color: #57534e;
           cursor: pointer;
           text-align: left;
-          transition: border-color 0.15s, background 0.15s, color 0.15s;
-          line-height: 1.4;
+          transition: border-color 0.16s, background 0.16s, color 0.16s,
+            box-shadow 0.16s, transform 0.16s;
+          line-height: 1.45;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
         .sug-btn:hover {
-          border-color: #d6d3d1;
-          background: #fafaf9;
-          color: #292524;
+          border-color: #99f6e4;
+          background: #ffffff;
+          color: #1c1917;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+          transform: translateY(-1px);
         }
+        .sug-btn:active { transform: translateY(0); }
+        .sug-btn:focus-visible {
+          outline: 2px solid #00b39f;
+          outline-offset: 2px;
+        }
+        .sug-arrow { opacity: 0; transition: opacity 0.16s, transform 0.16s; }
+        .sug-btn:hover .sug-arrow { opacity: 1; transform: translateX(2px); }
 
         .msg-enter {
-          animation: fadeUp 0.2s ease-out forwards;
+          animation: fadeUp 0.22s ease-out forwards;
         }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(6px); }
@@ -224,18 +237,28 @@ export default function Home() {
         .send-btn {
           background: #00d1b2;
           border: none;
-          border-radius: 9px;
-          width: 36px;
-          height: 36px;
+          border-radius: 10px;
+          width: 38px;
+          height: 38px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           flex-shrink: 0;
-          transition: opacity 0.15s;
+          transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
         }
-        .send-btn:hover { opacity: 0.85; }
-        .send-btn:disabled { opacity: 0.4; cursor: default; }
+        .send-btn:hover:not(:disabled) {
+          opacity: 0.92;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 209, 178, 0.32);
+        }
+        .send-btn:active:not(:disabled) { transform: translateY(0); }
+        .send-btn:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+        .send-btn:focus-visible {
+          outline: 2px solid #00b39f;
+          outline-offset: 2px;
+        }
 
         .reset-btn {
           background: none;
@@ -249,86 +272,113 @@ export default function Home() {
           justify-content: center;
           transition: background 0.15s, color 0.15s;
         }
-        .reset-btn:hover { background: #f5f5f4; color: #57534e; }
+        .reset-btn:hover:not(:disabled) { background: #f5f5f4; color: #57534e; }
+        .reset-btn:disabled { opacity: 0.35; cursor: default; }
+        .reset-btn:focus-visible {
+          outline: 2px solid #00b39f;
+          outline-offset: 2px;
+        }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 99px; }
+        .composer:focus-within {
+          border-color: #5eead4;
+          box-shadow: 0 0 0 3px rgba(0, 209, 178, 0.1);
+        }
+
+        @media (max-width: 640px) {
+          .sug-grid { grid-template-columns: 1fr; }
+          .bubble { max-width: 88% !important; }
+        }
       `}</style>
 
       {/* ── Header ── */}
       <header
         style={{
-          background: "white",
+          background: "rgba(255, 255, 255, 0.88)",
+          backdropFilter: "blur(8px)",
           borderBottom: "1px solid #e7e5e4",
-          padding: "0 24px",
-          height: "90px",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
           flexShrink: 0,
           zIndex: 10,
         }}
       >
-        {/* Logo */}
         <div
           style={{
-            width: 38,
-            height: 38,
-            background: "#00d1b2",
-            borderRadius: 9,
+            height: 72,
+            width: "100%",
+            maxWidth: 768,
+            margin: "0 auto",
+            padding: "0 24px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
+            gap: "12px",
           }}
         >
-          <svg width="15" height="15" viewBox="0 0 14 14">
-            <rect x="1" y="1" width="5" height="5" fill="white" />
-            <rect x="8" y="1" width="5" height="5" fill="white" opacity="0.5" />
-            <rect x="1" y="8" width="5" height="5" fill="white" opacity="0.5" />
-            <rect x="8" y="8" width="5" height="5" fill="white" opacity="0.2" />
-          </svg>
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <div className="serif" style={{ fontSize: 16, color: "#1c1917", lineHeight: 1.2 }}>
-            Amrood Labs
-          </div>
           <div
             style={{
-              fontSize: 10,
-              color: "#a8a29e",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginTop: 2,
+              width: 36,
+              height: 36,
+              background: "#00d1b2",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(0, 209, 178, 0.28)",
             }}
           >
-            HR Knowledge Assistant
+            <svg width="15" height="15" viewBox="0 0 14 14">
+              <rect x="1" y="1" width="5" height="5" rx="1.2" fill="white" />
+              <rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity="0.5" />
+              <rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity="0.5" />
+              <rect x="8" y="8" width="5" height="5" rx="1.2" fill="white" opacity="0.2" />
+            </svg>
           </div>
-        </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 11,
-            color: "#78716c",
-          }}
-        >
-          <span
-            className={apiStatus === "checking" ? "" : "pulse-dot"}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              className="serif"
+              style={{ fontSize: 16.5, color: "#1c1917", lineHeight: 1.2 }}
+            >
+              Amrood Labs
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: "#a8a29e",
+                letterSpacing: "0.09em",
+                textTransform: "uppercase",
+                marginTop: 2,
+              }}
+            >
+              HR Knowledge Assistant
+            </div>
+          </div>
+
+          <div
             style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: STATUS_COLOR[apiStatus],
-              display: "inline-block",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 11,
+              color: "#78716c",
+              border: "1px solid #e7e5e4",
+              background: "white",
+              borderRadius: 999,
+              padding: "5px 10px 5px 9px",
+              flexShrink: 0,
             }}
-          />
-          {STATUS_LABEL[apiStatus]}
+          >
+            <span
+              className={apiStatus === "checking" ? "" : "pulse-dot"}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: STATUS_COLOR[apiStatus],
+                display: "inline-block",
+              }}
+            />
+            {STATUS_LABEL[apiStatus]}
+          </div>
         </div>
       </header>
 
@@ -344,7 +394,7 @@ export default function Home() {
         <div
           style={{
             width: "100%",
-            maxWidth: 720,
+            maxWidth: 768,
             margin: "0 auto",
             padding: "32px 24px 24px",
             flex: 1,
@@ -361,56 +411,61 @@ export default function Home() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 28,
-                paddingBottom: 48,
+                gap: 34,
+                paddingBottom: 40,
               }}
             >
               <div style={{ textAlign: "center" }}>
                 <div
                   style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 14,
-                    background: "white",
-                    border: "1px solid #e7e5e4",
+                    width: 56,
+                    height: 56,
+                    borderRadius: 16,
+                    background: "linear-gradient(140deg, #ccfbf1 0%, #f0fdfa 100%)",
+                    border: "1px solid #99f6e4",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: "0 auto 18px",
+                    margin: "0 auto 20px",
+                    boxShadow: "0 4px 16px rgba(0, 209, 178, 0.12)",
                   }}
                 >
-                  <FileText size={22} color="#a8a29e" />
+                  <FileText size={24} color="#00a894" />
                 </div>
                 <h1
                   className="serif"
                   style={{
-                    fontSize: 26,
+                    fontSize: 27,
                     color: "#1c1917",
                     margin: 0,
                     fontWeight: 400,
+                    letterSpacing: "-0.01em",
                   }}
                 >
-                  Employee Handbook
+                  How can I help?
                 </h1>
                 <p
                   style={{
-                    fontSize: 13,
-                    color: "#a8a29e",
-                    margin: "8px 0 0",
-                    lineHeight: 1.6,
+                    fontSize: 13.5,
+                    color: "#78716c",
+                    margin: "10px auto 0",
+                    lineHeight: 1.65,
+                    maxWidth: 380,
                   }}
                 >
-                  Ask about leave, benefits, working hours, complaints, and more.
+                  Ask anything about the Amrood Labs employee handbook &mdash; leave,
+                  benefits, working hours, and policies.
                 </p>
               </div>
 
               <div
+                className="sug-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
-                  gap: 8,
+                  gap: 10,
                   width: "100%",
-                  maxWidth: 440,
+                  maxWidth: 520,
                 }}
               >
                 {SUGGESTIONS.map((s) => (
@@ -419,7 +474,8 @@ export default function Home() {
                     className="sug-btn"
                     onClick={() => sendMessage(s)}
                   >
-                    {s}
+                    <span style={{ flex: 1 }}>{s}</span>
+                    <ArrowRight size={14} className="sug-arrow" color="#00b39f" />
                   </button>
                 ))}
               </div>
@@ -463,10 +519,11 @@ export default function Home() {
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: 5,
-                    maxWidth: "75%",
+                    gap: 7,
+                    maxWidth: "78%",
                     alignItems: msg.role === "user" ? "flex-end" : "flex-start",
                   }}
+                  className="bubble"
                 >
                   <div
                     style={
@@ -653,52 +710,47 @@ export default function Home() {
       {/* ── Input bar ── */}
       <div
         style={{
-          background: "white",
+          background: "rgba(255, 255, 255, 0.88)",
+          backdropFilter: "blur(8px)",
           borderTop: "1px solid #e7e5e4",
-          padding: "12px 24px 16px",
+          padding: "14px 24px 18px",
           flexShrink: 0,
         }}
       >
         <div
           style={{
             width: "100%",
-            maxWidth: 720,
+            maxWidth: 768,
             margin: "0 auto",
             display: "flex",
             gap: 10,
             alignItems: "flex-end",
           }}
         >
-          {/* Reset button — only visible when there are messages */}
-          {messages.length > 0 && (
-            <button
-              className="reset-btn"
-              onClick={() => setMessages([])}
-              title="Clear conversation"
-            >
-              <RotateCcw size={15} />
-            </button>
-          )}
+          <button
+            className="reset-btn"
+            onClick={() => setMessages([])}
+            disabled={messages.length === 0}
+            title="Clear conversation"
+            aria-label="Clear conversation"
+          >
+            <RotateCcw size={15} />
+          </button>
 
-          {/* Textarea wrapper */}
           <div
+            className="composer"
             style={{
               flex: 1,
+              minWidth: 0,
               background: "#f5f5f4",
               border: "1px solid #e7e5e4",
-              borderRadius: 12,
+              borderRadius: 14,
               display: "flex",
               alignItems: "flex-end",
-              padding: "0 12px",
+              padding: "0 10px 0 14px",
               gap: 8,
-              transition: "border-color 0.15s",
+              transition: "border-color 0.15s, box-shadow 0.15s",
             }}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = "#d6d3d1")
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor = "#e7e5e4")
-            }
           >
             <textarea
               ref={textareaRef}
@@ -735,8 +787,9 @@ export default function Home() {
             className="send-btn"
             onClick={() => sendMessage(input)}
             disabled={loading || !input.trim()}
+            aria-label="Send question"
           >
-            <Send size={14} color="white" />
+            <Send size={15} color="white" />
           </button>
         </div>
 
@@ -744,11 +797,11 @@ export default function Home() {
           style={{
             textAlign: "center",
             fontSize: 11,
-            color: "#d6d3d1",
-            margin: "10px 0 0",
+            color: "#a8a29e",
+            margin: "12px 0 0",
           }}
         >
-          Answers are based on the Amrood Labs employee handbook.
+          Answers are grounded in the Amrood Labs employee handbook.
         </p>
       </div>
     </div>
