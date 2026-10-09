@@ -4,29 +4,29 @@ const BULLET = /^\s*[-*•]\s+(.*)$/;
 const NUMBER = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING = /^(#{1,4})\s+(.*)$/;
 
-const STRONG = { fontWeight: 600, color: "#1c1917" } as const;
-const EMPHASIS = { fontStyle: "italic" as const, color: "#57534e" };
+const STRONG = { fontWeight: 600, color: "var(--text-primary)" } as const;
+const EMPHASIS = { fontStyle: "italic" as const, color: "var(--text-secondary)" };
 const CODE = {
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
   fontSize: "0.86em",
-  background: "#f5f5f4",
-  border: "1px solid #e7e5e4",
+  background: "var(--surface-sunken)",
+  border: "1px solid var(--border)",
   padding: "1px 5px",
   borderRadius: 5,
-  color: "#0f766e",
+  color: "var(--code-text)",
 };
 const PARAGRAPH = { margin: "0 0 10px", lineHeight: 1.7 };
 const CODE_BLOCK = {
   margin: "0 0 10px",
   padding: "10px 12px",
-  background: "#f5f5f4",
-  border: "1px solid #e7e5e4",
+  background: "var(--surface-sunken)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
   overflowX: "auto" as const,
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
   fontSize: 12.5,
   lineHeight: 1.6,
-  color: "#292524",
+  color: "var(--text-body)",
 };
 
 function inline(text: string, keyBase: string): ReactNode[] {
@@ -174,7 +174,7 @@ function blocks(lines: string[], depth = 0): ReactNode[] {
         <div
           key={`b${key++}`}
           className="serif"
-          style={{ fontSize: 15, fontWeight: 500, color: "#1c1917", margin: "2px 0 8px" }}
+          style={{ fontSize: 15, fontWeight: 500, color: "var(--text-primary)", margin: "2px 0 8px" }}
         >
           {inline(heading[2], `h${key}`)}
         </div>,

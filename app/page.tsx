@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, RotateCcw, FileText, Sparkles, Copy, Check, ArrowRight } from "lucide-react";
+import { Send, RotateCcw, FileText, Sparkles, Copy, Check, ArrowRight, Sun, Moon } from "lucide-react";
 import Markdown from "./components/Markdown";
 
 const REQUEST_TIMEOUT_MS = 45000;
@@ -37,9 +37,9 @@ const SUGGESTIONS = [
 ];
 
 const STATUS_COLOR: Record<ApiStatus, string> = {
-  checking: "#d6d3d1",
-  online: "#34d399",
-  offline: "#f87171",
+  checking: "var(--status-pending)",
+  online: "var(--status-online)",
+  offline: "var(--status-offline)",
 };
 
 const STATUS_LABEL: Record<ApiStatus, string> = {
@@ -80,6 +80,17 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
+
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // storage unavailable — theme still applies for this page view
+    }
+  }
 
   function autoResize() {
     const el = textareaRef.current;
@@ -170,15 +181,15 @@ export default function Home() {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        background: "#fafaf9",
+        background: "var(--bg)",
       }}
     >
       <style>{`
         textarea:focus { outline: none; }
-        textarea::placeholder { color: #a8a29e; }
+        textarea::placeholder { color: var(--text-subtle); }
 
-        .md-list { color: #292524; }
-        .md-list li::marker { color: #00b39f; }
+        .md-list { color: var(--text-body); }
+        .md-list li::marker { color: var(--brand-dark); }
 
         .dot-bounce { animation: bounce 1.2s ease-in-out infinite; }
         .dot-bounce:nth-child(2) { animation-delay: 0.2s; }
@@ -195,13 +206,13 @@ export default function Home() {
         }
 
         .sug-btn {
-          background: white;
-          border: 1px solid #e7e5e4;
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 13px 15px;
           font-family: inherit;
           font-size: 13.5px;
-          color: #57534e;
+          color: var(--text-secondary);
           cursor: pointer;
           text-align: left;
           transition: border-color 0.16s, background 0.16s, color 0.16s,
@@ -212,15 +223,15 @@ export default function Home() {
           gap: 10px;
         }
         .sug-btn:hover {
-          border-color: #99f6e4;
-          background: #ffffff;
-          color: #1c1917;
-          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+          border-color: var(--border-brand);
+          background: var(--surface);
+          color: var(--text-primary);
+          box-shadow: 0 4px 14px var(--shadow-md);
           transform: translateY(-1px);
         }
         .sug-btn:active { transform: translateY(0); }
         .sug-btn:focus-visible {
-          outline: 2px solid #00b39f;
+          outline: 2px solid var(--brand-dark);
           outline-offset: 2px;
         }
         .sug-arrow { opacity: 0; transition: opacity 0.16s, transform 0.16s; }
@@ -235,7 +246,7 @@ export default function Home() {
         }
 
         .send-btn {
-          background: #00d1b2;
+          background: var(--brand);
           border: none;
           border-radius: 10px;
           width: 38px;
@@ -246,17 +257,17 @@ export default function Home() {
           cursor: pointer;
           flex-shrink: 0;
           transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+          box-shadow: 0 1px 2px var(--shadow-md);
         }
         .send-btn:hover:not(:disabled) {
           opacity: 0.92;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 209, 178, 0.32);
+          box-shadow: 0 4px 12px var(--brand-glow);
         }
         .send-btn:active:not(:disabled) { transform: translateY(0); }
         .send-btn:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
         .send-btn:focus-visible {
-          outline: 2px solid #00b39f;
+          outline: 2px solid var(--brand-dark);
           outline-offset: 2px;
         }
 
@@ -264,7 +275,7 @@ export default function Home() {
           background: none;
           border: none;
           cursor: pointer;
-          color: #a8a29e;
+          color: var(--text-subtle);
           padding: 8px;
           border-radius: 8px;
           display: flex;
@@ -272,30 +283,39 @@ export default function Home() {
           justify-content: center;
           transition: background 0.15s, color 0.15s;
         }
-        .reset-btn:hover:not(:disabled) { background: #f5f5f4; color: #57534e; }
+        .reset-btn:hover:not(:disabled) { background: var(--surface-sunken); color: var(--text-secondary); }
         .reset-btn:disabled { opacity: 0.35; cursor: default; }
         .reset-btn:focus-visible {
-          outline: 2px solid #00b39f;
+          outline: 2px solid var(--brand-dark);
           outline-offset: 2px;
         }
 
         .composer:focus-within {
-          border-color: #5eead4;
-          box-shadow: 0 0 0 3px rgba(0, 209, 178, 0.1);
+          border-color: var(--border-focus);
+          box-shadow: 0 0 0 3px var(--brand-glow-soft);
         }
 
         @media (max-width: 640px) {
           .sug-grid { grid-template-columns: 1fr; }
           .bubble { max-width: 88% !important; }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
       `}</style>
 
       {/* ── Header ── */}
       <header
         style={{
-          background: "rgba(255, 255, 255, 0.88)",
+          background: "var(--surface-glass)",
           backdropFilter: "blur(8px)",
-          borderBottom: "1px solid #e7e5e4",
+          borderBottom: "1px solid var(--border)",
           flexShrink: 0,
           zIndex: 10,
         }}
@@ -316,13 +336,13 @@ export default function Home() {
             style={{
               width: 36,
               height: 36,
-              background: "#00d1b2",
+              background: "var(--brand)",
               borderRadius: 10,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              boxShadow: "0 2px 8px rgba(0, 209, 178, 0.28)",
+              boxShadow: "0 2px 8px var(--brand-glow)",
             }}
           >
             <svg width="15" height="15" viewBox="0 0 14 14">
@@ -336,14 +356,14 @@ export default function Home() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               className="serif"
-              style={{ fontSize: 16.5, color: "#1c1917", lineHeight: 1.2 }}
+              style={{ fontSize: 16.5, color: "var(--text-primary)", lineHeight: 1.2 }}
             >
               Amrood Labs
             </div>
             <div
               style={{
                 fontSize: 10,
-                color: "#a8a29e",
+                color: "var(--text-subtle)",
                 letterSpacing: "0.09em",
                 textTransform: "uppercase",
                 marginTop: 2,
@@ -357,27 +377,46 @@ export default function Home() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 6,
-              fontSize: 11,
-              color: "#78716c",
-              border: "1px solid #e7e5e4",
-              background: "white",
-              borderRadius: 999,
-              padding: "5px 10px 5px 9px",
+              gap: 10,
               flexShrink: 0,
             }}
           >
-            <span
-              className={apiStatus === "checking" ? "" : "pulse-dot"}
+            <button
+              className="reset-btn"
+              onClick={toggleTheme}
+              title="Toggle dark mode"
+              aria-label="Toggle dark mode"
+            >
+              <Sun size={15} className="theme-icon-light" />
+              <Moon size={15} className="theme-icon-dark" />
+            </button>
+
+            <div
               style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: STATUS_COLOR[apiStatus],
-                display: "inline-block",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 11,
+                color: "var(--text-muted)",
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                borderRadius: 999,
+                padding: "5px 10px 5px 9px",
+                flexShrink: 0,
               }}
-            />
-            {STATUS_LABEL[apiStatus]}
+            >
+              <span
+                className={apiStatus === "checking" ? "" : "pulse-dot"}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: STATUS_COLOR[apiStatus],
+                  display: "inline-block",
+                }}
+              />
+              {STATUS_LABEL[apiStatus]}
+            </div>
           </div>
         </div>
       </header>
@@ -421,22 +460,22 @@ export default function Home() {
                     width: 56,
                     height: 56,
                     borderRadius: 16,
-                    background: "linear-gradient(140deg, #ccfbf1 0%, #f0fdfa 100%)",
-                    border: "1px solid #99f6e4",
+                    background: "linear-gradient(140deg, var(--brand-tint) 0%, var(--brand-tint-soft) 100%)",
+                    border: "1px solid var(--border-brand)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     margin: "0 auto 20px",
-                    boxShadow: "0 4px 16px rgba(0, 209, 178, 0.12)",
+                    boxShadow: "0 4px 16px var(--brand-glow-soft)",
                   }}
                 >
-                  <FileText size={24} color="#00a894" />
+                  <FileText size={24} color="var(--brand-icon)" />
                 </div>
                 <h1
                   className="serif"
                   style={{
                     fontSize: 27,
-                    color: "#1c1917",
+                    color: "var(--text-primary)",
                     margin: 0,
                     fontWeight: 400,
                     letterSpacing: "-0.01em",
@@ -447,7 +486,7 @@ export default function Home() {
                 <p
                   style={{
                     fontSize: 13.5,
-                    color: "#78716c",
+                    color: "var(--text-muted)",
                     margin: "10px auto 0",
                     lineHeight: 1.65,
                     maxWidth: 380,
@@ -475,7 +514,7 @@ export default function Home() {
                     onClick={() => sendMessage(s)}
                   >
                     <span style={{ flex: 1 }}>{s}</span>
-                    <ArrowRight size={14} className="sug-arrow" color="#00b39f" />
+                    <ArrowRight size={14} className="sug-arrow" color="var(--brand-dark)" />
                   </button>
                 ))}
               </div>
@@ -483,7 +522,13 @@ export default function Home() {
           )}
 
           {/* ── Messages ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions text"
+            aria-label="Conversation"
+            style={{ display: "flex", flexDirection: "column", gap: 20 }}
+          >
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -505,12 +550,12 @@ export default function Home() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: msg.role === "user" ? "#00d1b2" : "white",
-                    border: msg.role === "assistant" ? "1px solid #e7e5e4" : "none",
+                    background: msg.role === "user" ? "var(--brand)" : "var(--surface)",
+                    border: msg.role === "assistant" ? "1px solid var(--border)" : "none",
                   }}
                 >
                   {msg.role === "assistant" && (
-                    <Sparkles size={12} color="#a8a29e" />
+                    <Sparkles size={12} color="var(--text-subtle)" />
                   )}
                 </div>
 
@@ -529,8 +574,8 @@ export default function Home() {
                     style={
                       msg.role === "user"
                         ? {
-                            background: "#00d1b2",
-                            color: "white",
+                            background: "var(--brand)",
+                            color: "var(--text-inverse)",
                             padding: "11px 16px",
                             borderRadius: "16px 4px 16px 16px",
                             fontSize: 14.5,
@@ -538,14 +583,14 @@ export default function Home() {
                             overflowWrap: "anywhere",
                           }
                         : {
-                            background: "white",
-                            color: "#292524",
-                            border: "1px solid #e7e5e4",
+                            background: "var(--surface)",
+                            color: "var(--text-body)",
+                            border: "1px solid var(--border)",
                             padding: "14px 18px",
                             borderRadius: "4px 16px 16px 16px",
                             fontSize: 14.5,
                             lineHeight: 1.7,
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                            boxShadow: "0 1px 3px var(--shadow-sm)",
                             minWidth: 0,
                             overflowWrap: "anywhere",
                           }
@@ -561,7 +606,7 @@ export default function Home() {
                   {msg.role === "assistant" && (
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       {msg.sources && msg.sources.length > 0 && (
-                        <details style={{ fontSize: 11.5, color: "#a8a29e" }}>
+                        <details style={{ fontSize: 11.5, color: "var(--text-subtle)" }}>
                           <summary
                             style={{
                               cursor: "pointer",
@@ -588,8 +633,8 @@ export default function Home() {
                                   display: "flex",
                                   gap: 8,
                                   alignItems: "flex-start",
-                                  background: "#f5f5f4",
-                                  border: "1px solid #e7e5e4",
+                                  background: "var(--surface-sunken)",
+                                  border: "1px solid var(--border)",
                                   borderRadius: 8,
                                   padding: "7px 10px",
                                   lineHeight: 1.5,
@@ -598,18 +643,18 @@ export default function Home() {
                                 <span
                                   style={{
                                     flexShrink: 0,
-                                    background: "white",
-                                    border: "1px solid #e7e5e4",
+                                    background: "var(--surface)",
+                                    border: "1px solid var(--border)",
                                     borderRadius: 5,
                                     padding: "1px 6px",
                                     fontSize: 10.5,
-                                    color: "#78716c",
+                                    color: "var(--text-muted)",
                                     whiteSpace: "nowrap",
                                   }}
                                 >
                                   p. {s.page}
                                 </span>
-                                <span style={{ color: "#78716c" }}>{s.snippet}</span>
+                                <span style={{ color: "var(--text-muted)" }}>{s.snippet}</span>
                               </div>
                             ))}
                           </div>
@@ -626,7 +671,7 @@ export default function Home() {
                           background: "none",
                           border: "none",
                           cursor: "pointer",
-                          color: "#a8a29e",
+                          color: "var(--text-subtle)",
                           display: "flex",
                           alignItems: "center",
                           gap: 4,
@@ -655,6 +700,7 @@ export default function Home() {
             {loading && (
               <div
                 className="msg-enter"
+                aria-hidden="true"
                 style={{ display: "flex", gap: 10, alignItems: "flex-start" }}
               >
                 <div
@@ -666,22 +712,22 @@ export default function Home() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "white",
-                    border: "1px solid #e7e5e4",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
                   }}
                 >
-                  <Sparkles size={12} color="#a8a29e" />
+                  <Sparkles size={12} color="var(--text-subtle)" />
                 </div>
                 <div
                   style={{
-                    background: "white",
-                    border: "1px solid #e7e5e4",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px 14px 14px 14px",
                     padding: "13px 16px",
                     display: "flex",
                     gap: 5,
                     alignItems: "center",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    boxShadow: "0 1px 3px var(--shadow-sm)",
                   }}
                 >
                   {[0, 1, 2].map((i) => (
@@ -692,7 +738,7 @@ export default function Home() {
                         width: 6,
                         height: 6,
                         borderRadius: "50%",
-                        background: "#d6d3d1",
+                        background: "var(--border-strong)",
                         display: "inline-block",
                         animationDelay: `${i * 0.2}s`,
                       }}
@@ -710,9 +756,9 @@ export default function Home() {
       {/* ── Input bar ── */}
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.88)",
+          background: "var(--surface-glass)",
           backdropFilter: "blur(8px)",
-          borderTop: "1px solid #e7e5e4",
+          borderTop: "1px solid var(--border)",
           padding: "14px 24px 18px",
           flexShrink: 0,
         }}
@@ -742,8 +788,8 @@ export default function Home() {
             style={{
               flex: 1,
               minWidth: 0,
-              background: "#f5f5f4",
-              border: "1px solid #e7e5e4",
+              background: "var(--surface-sunken)",
+              border: "1px solid var(--border)",
               borderRadius: 14,
               display: "flex",
               alignItems: "flex-end",
@@ -773,7 +819,7 @@ export default function Home() {
                 border: "none",
                 fontFamily: "inherit",
                 fontSize: 14,
-                color: "#292524",
+                color: "var(--text-body)",
                 padding: "10px 0",
                 resize: "none",
                 lineHeight: 1.5,
@@ -789,7 +835,7 @@ export default function Home() {
             disabled={loading || !input.trim()}
             aria-label="Send question"
           >
-            <Send size={15} color="white" />
+            <Send size={15} color="var(--text-inverse)" />
           </button>
         </div>
 
@@ -797,7 +843,7 @@ export default function Home() {
           style={{
             textAlign: "center",
             fontSize: 11,
-            color: "#a8a29e",
+            color: "var(--text-subtle)",
             margin: "12px 0 0",
           }}
         >

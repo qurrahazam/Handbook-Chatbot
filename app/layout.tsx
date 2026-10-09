@@ -16,6 +16,8 @@ const lora = Lora({
   display: "swap",
 });
 
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
+
 export const metadata: Metadata = {
   title: "Amrood Labs HR Assistant",
   description: "Ask questions about the employee handbook",
@@ -28,6 +30,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${lora.variable}`}>
+      <head>
+        {/* Runs before first paint so the correct theme is applied without a flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );
